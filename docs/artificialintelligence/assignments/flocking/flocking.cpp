@@ -101,7 +101,33 @@ struct Cohesion {
   Cohesion() = default;
 
   Vector2 ComputeForce(const vector<Boid>& boids, int boidAgentIndex) {
-    return {};
+    Vector2 centerOfMass = {0,0};
+    int numberOfBoidsInRadius = 0;
+
+    //Runs through the boids vector to search for boids within the radius
+    for (int i = 0; i < boids.size(); ++i) {
+        const double distenceToBoid = (boids[i].position - boids[boidAgentIndex].position).getMagnitude();
+        if (distenceToBoid <= radius && i != boidAgentIndex) { //Checks if distance is under radius and excludes self
+
+          //Adds position of mass and increments boids within the radius found
+          centerOfMass += boids[i].position;
+          numberOfBoidsInRadius++;
+      }
+    }
+
+    //Calculates accurate center of mass
+    centerOfMass /= numberOfBoidsInRadius;
+
+    //Finds vector to center of mass from agent
+    Vector2 agentDirection = centerOfMass - boids[boidAgentIndex].position;
+
+    cout << "cohetion " << (agentDirection / radius).x * k << " " << (agentDirection / radius).y * k << endl;
+    //make sure that center of mass is in radius
+    if (agentDirection.getMagnitude() <= radius) {
+      return (agentDirection / radius) * k;
+    }
+
+    return {0, 0};
   }
 };
 
@@ -112,7 +138,25 @@ struct Alignment {
   Alignment() = default;
 
   Vector2 ComputeForce(const vector<Boid>& boids, int boidAgentIndex) {
-    return {};
+    Vector2 avarageVelocity = {0,0};
+    int numberOfBoidsInRadius = 0;
+
+    //Runs through the boids vector to search for boids within the radius (includes itself)
+    for (int i = 0; i < boids.size(); ++i) {
+      const double distenceToBoid = (boids[i].position - boids[boidAgentIndex].position).getMagnitude();
+      if (distenceToBoid <= radius) {
+        //Adds position of mass and increments boids within the radius found
+        avarageVelocity += boids[i].velocity;
+        numberOfBoidsInRadius += 1;
+      }
+    }
+
+    cout << "alignment" << endl;
+    //Calculates accurate average velocity
+    avarageVelocity /= numberOfBoidsInRadius;
+    avarageVelocity *= k;
+
+    return avarageVelocity;
   }
 };
 
@@ -124,7 +168,28 @@ struct Separation {
   Separation() = default;
 
   Vector2 ComputeForce(const vector<Boid>& boids, int boidAgentIndex) {
-    return {};
+    Vector2 seperationForce = {0,0};
+
+    //Runs through the boids vector to search for boids within the radius
+    for (int i = 0; i < boids.size(); ++i) {
+      if (i != boidAgentIndex) { //Excludes the agent's self
+        const double distenceToBoid = (boids[boidAgentIndex].position - boids[i].position).getMagnitude();
+        if (distenceToBoid <= radius) {
+          Vector2 otherBoidToAgentVector = boids[boidAgentIndex].position - boids[i].position;
+
+          seperationForce += otherBoidToAgentVector.normalized() / otherBoidToAgentVector.getMagnitude();
+        }
+      }
+    }
+
+    cout << "seperation " << seperationForce.x << " " << seperationForce.y << " " << maxForce << endl;
+
+    //Scales seperation for to max force times k if larger than maxForce
+    if (seperationForce.getMagnitude() > maxForce) {
+      return seperationForce.normalized() * maxForce * k;
+    }
+
+    return seperationForce * k;
   }
 };
 
@@ -175,13 +240,15 @@ int main() {
         }
       }
     }
+
     // Tick Time and Output
     // todo: edit this. probably my code will be different than yours.
     cout << fixed << setprecision(3);  // set 3 decimal places precision for output
     for (int i = 0; i < numberOfBoids; i++) // for every boid
     {
+      //cout << "force " << newState[i].position.y << " " << newState[i].velocity.y << " " << allForces[i].y * deltaT << " time " << deltaT << endl;
       newState[i].velocity += allForces[i] * deltaT;
-      newState[i].position += currentState[i].velocity * deltaT;
+      newState[i].position += newState[i].velocity * deltaT; //Applies velocity to boid
       cout << newState[i].position.x << " " << newState[i].position.y << " "
            << newState[i].velocity.x << " " << newState[i].velocity.y << endl;
     }
