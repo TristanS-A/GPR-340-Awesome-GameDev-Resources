@@ -121,7 +121,7 @@ struct Cohesion {
     //Finds vector to center of mass from agent
     Vector2 agentDirection = centerOfMass - boids[boidAgentIndex].position;
 
-    cout << "cohetion " << (agentDirection / radius).x * k << " " << (agentDirection / radius).y * k << endl;
+    cout << "cohetion_x_y " << (agentDirection / radius).x * k << " " << (agentDirection / radius).y * k << endl;
     //make sure that center of mass is in radius
     if (agentDirection.getMagnitude() <= radius) {
       return (agentDirection / radius) * k;
@@ -177,12 +177,12 @@ struct Separation {
         if (distenceToBoid <= radius) {
           Vector2 otherBoidToAgentVector = boids[boidAgentIndex].position - boids[i].position;
 
-          seperationForce += otherBoidToAgentVector.normalized() / otherBoidToAgentVector.getMagnitude();
+          seperationForce += otherBoidToAgentVector / otherBoidToAgentVector.sqrMagnitude(); //More efficient than otherBoidToAgentVector.normalized() / otherBoidToAgentVector.getMagnitude()
         }
       }
     }
 
-    cout << "seperation " << seperationForce.x << " " << seperationForce.y << " " << maxForce << endl;
+    cout << "seperation_x_y " << seperationForce.x * k << " " << seperationForce.y * k << " " << maxForce << endl;
 
     //Scales seperation for to max force times k if larger than maxForce
     if (seperationForce.getMagnitude() > maxForce) {
