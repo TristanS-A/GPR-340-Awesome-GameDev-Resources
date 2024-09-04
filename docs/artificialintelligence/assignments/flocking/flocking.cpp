@@ -114,7 +114,7 @@ struct Cohesion {
           numberOfBoidsInRadius++;
       }
     }
-
+    cout<< "co" << endl;
     //Calculates accurate center of mass
     centerOfMass /= numberOfBoidsInRadius;
 
@@ -144,12 +144,13 @@ struct Alignment {
     for (int i = 0; i < boids.size(); ++i) {
       const double distenceToBoid = (boids[i].position - boids[boidAgentIndex].position).getMagnitude();
       if (distenceToBoid <= radius) {
-        //Adds position of mass and increments boids within the radius found
+        //Adds velocity and increments boids within the radius found
         avarageVelocity += boids[i].velocity;
-        numberOfBoidsInRadius += 1;
+        numberOfBoidsInRadius++;
       }
     }
 
+    cout<< "al" << endl;
     //Calculates accurate average velocity
     avarageVelocity /= numberOfBoidsInRadius;
     avarageVelocity *= k;
@@ -179,8 +180,7 @@ struct Separation {
         }
       }
     }
-
-    seperationForce *= k;
+    cout<< "sep" << endl;
 
     //To satisfy separation tests you must use this type of clamping
     if (seperationForce.getMagnitude() > maxForce) {
@@ -188,16 +188,6 @@ struct Separation {
     }
 
     return seperationForce * k;
-
-    //More accurate separation result
-    seperationForce *= k;
-
-    //Scales seperation for to max force times k if larger than maxForce
-    if (seperationForce.getMagnitude() > maxForce) {
-      return seperationForce.normalized() * maxForce;
-    }
-
-    return seperationForce;
   }
 };
 
@@ -243,7 +233,7 @@ int main() {
           allForces[i] += separation.ComputeForce(currentState, i);
         }
         // Process Alignment Forces
-        if (i != j && dist <= alignment.radius) {
+        if (dist <= alignment.radius) { //This: --> i != j && <-- excludes itself
           allForces[i] += alignment.ComputeForce(currentState, i);
         }
       }
@@ -254,7 +244,7 @@ int main() {
     cout << fixed << setprecision(3);  // set 3 decimal places precision for output
     for (int i = 0; i < numberOfBoids; i++) // for every boid
     {
-      cout << "force " << allForces[i].x * deltaT << " " << newState[i].velocity.x << " " << newState[i].position.x + allForces[i].x * deltaT * deltaT << " time " << deltaT << endl;
+      //cout << "force " << allForces[i].x * deltaT << " " << newState[i].velocity.x << " " << newState[i].position.x + allForces[i].x * deltaT * deltaT << " time " << deltaT << endl;
       newState[i].velocity += allForces[i] * deltaT;
       newState[i].position += newState[i].velocity * deltaT; //Applies velocity to boid
       cout << newState[i].position.x << " " << newState[i].position.y << " "
