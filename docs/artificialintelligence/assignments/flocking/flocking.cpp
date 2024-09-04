@@ -121,7 +121,6 @@ struct Cohesion {
     //Finds vector to center of mass from agent
     Vector2 agentDirection = centerOfMass - boids[boidAgentIndex].position;
 
-    cout << "cohetion_x_y " << (agentDirection / radius).x * k << " " << (agentDirection / radius).y * k << endl;
     //make sure that center of mass is in radius
     if (agentDirection.getMagnitude() <= radius) {
       return (agentDirection / radius) * k;
@@ -151,7 +150,6 @@ struct Alignment {
       }
     }
 
-    cout << "alignment" << endl;
     //Calculates accurate average velocity
     avarageVelocity /= numberOfBoidsInRadius;
     avarageVelocity *= k;
@@ -174,7 +172,7 @@ struct Separation {
     for (int i = 0; i < boids.size(); ++i) {
       if (i != boidAgentIndex) { //Excludes the agent's self
         const double distenceToBoid = (boids[boidAgentIndex].position - boids[i].position).getMagnitude();
-        if (distenceToBoid <= radius) {
+        if (0 < distenceToBoid && distenceToBoid <= radius) {
           Vector2 otherBoidToAgentVector = boids[boidAgentIndex].position - boids[i].position;
 
           seperationForce += otherBoidToAgentVector / otherBoidToAgentVector.sqrMagnitude(); //More efficient than otherBoidToAgentVector.normalized() / otherBoidToAgentVector.getMagnitude()
@@ -182,14 +180,24 @@ struct Separation {
       }
     }
 
-    cout << "seperation_x_y " << seperationForce.x * k << " " << seperationForce.y * k << " " << maxForce << endl;
+    seperationForce *= k;
 
-    //Scales seperation for to max force times k if larger than maxForce
+    //To satisfy separation tests you must use this type of clamping
     if (seperationForce.getMagnitude() > maxForce) {
       return seperationForce.normalized() * maxForce * k;
     }
 
     return seperationForce * k;
+
+    //More accurate separation result
+    seperationForce *= k;
+
+    //Scales seperation for to max force times k if larger than maxForce
+    if (seperationForce.getMagnitude() > maxForce) {
+      return seperationForce.normalized() * maxForce;
+    }
+
+    return seperationForce;
   }
 };
 
@@ -246,7 +254,7 @@ int main() {
     cout << fixed << setprecision(3);  // set 3 decimal places precision for output
     for (int i = 0; i < numberOfBoids; i++) // for every boid
     {
-      //cout << "force " << newState[i].position.y << " " << newState[i].velocity.y << " " << allForces[i].y * deltaT << " time " << deltaT << endl;
+      cout << "force " << allForces[i].x * deltaT << " " << newState[i].velocity.x << " " << newState[i].position.x + allForces[i].x * deltaT * deltaT << " time " << deltaT << endl;
       newState[i].velocity += allForces[i] * deltaT;
       newState[i].position += newState[i].velocity * deltaT; //Applies velocity to boid
       cout << newState[i].position.x << " " << newState[i].position.y << " "
