@@ -114,18 +114,20 @@ struct Cohesion {
           numberOfBoidsInRadius++;
       }
     }
-    cout<< "co" << endl;
+
     //Calculates accurate center of mass
     centerOfMass /= numberOfBoidsInRadius;
 
     //Finds vector to center of mass from agent
     Vector2 agentDirection = centerOfMass - boids[boidAgentIndex].position;
 
-    //make sure that center of mass is in radius
+    //Make sure that center of mass is in radius
     if (agentDirection.getMagnitude() <= radius) {
-      return (agentDirection / radius) * k;
+      agentDirection /= radius; //Linearly scales direction vector from radius
+      return agentDirection * k; //Multiplied by weight k
     }
 
+    //Else returns no force
     return {0, 0};
   }
 };
@@ -150,9 +152,10 @@ struct Alignment {
       }
     }
 
-    cout<< "al" << endl;
     //Calculates accurate average velocity
     avarageVelocity /= numberOfBoidsInRadius;
+
+    //Multiplies by weight k
     avarageVelocity *= k;
 
     return avarageVelocity;
@@ -174,20 +177,19 @@ struct Separation {
       if (i != boidAgentIndex) { //Excludes the agent's self
         const double distenceToBoid = (boids[boidAgentIndex].position - boids[i].position).getMagnitude();
         if (0 < distenceToBoid && distenceToBoid <= radius) {
+          //Constructs vector from boid to agent and scales it inversely proportional to the distance between them
           Vector2 otherBoidToAgentVector = boids[boidAgentIndex].position - boids[i].position;
-
           seperationForce += otherBoidToAgentVector / otherBoidToAgentVector.sqrMagnitude(); //More efficient than otherBoidToAgentVector.normalized() / otherBoidToAgentVector.getMagnitude()
         }
       }
     }
-    cout<< "sep" << endl;
 
-    //To satisfy separation tests you must use this type of clamping
+    //Clamps to max force
     if (seperationForce.getMagnitude() > maxForce) {
-      return seperationForce.normalized() * maxForce * k;
+      return seperationForce.normalized() * maxForce * k; //Multiplies result by weight k
     }
 
-    return seperationForce * k;
+    return seperationForce * k; //Multiplies result by weight k
   }
 };
 
