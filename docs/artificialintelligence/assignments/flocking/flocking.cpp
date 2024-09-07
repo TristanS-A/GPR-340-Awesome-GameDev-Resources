@@ -235,7 +235,7 @@ int main() {
           allForces[i] += separation.ComputeForce(currentState, i);
         }
         // Process Alignment Forces
-        if (dist <= alignment.radius) { //This: --> i != j && <-- excludes itself
+        if (dist <= alignment.radius) { //Got rid of: --> i != j && <-- which excludes itself
           allForces[i] += alignment.ComputeForce(currentState, i);
         }
       }
