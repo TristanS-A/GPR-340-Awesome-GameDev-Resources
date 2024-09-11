@@ -73,7 +73,6 @@ public:
     auto index = point.y * width + point.x;
     auto sideSquared = width * height;
     if (index >= sideSquared) index %= sideSquared;
-    std::cout << index << std::endl;
     buffer[currentBufferId % 2][index] = value;
   }
 
@@ -97,15 +96,27 @@ int main() {
   World world;
   bool playing = true;
   int flippedWidth = 0, flippedHeight = 0, turns = 0;
+  char currState = ' ';
 
   while (playing) {
     std::cin >> flippedWidth >> flippedHeight >> turns;
 
     world.Resize(flippedHeight, flippedWidth);
 
-    world.SetCurrent({1, 6}, true);
+    for (int i = 0; i < world.getWidth(); i++) {
+      for (int j = 0; j < world.getHeight(); j++) {
+        std::cin >> currState;
+        if (currState == '.') {
+          world.SetCurrent({i, j}, false);
+        }
+        else {
+          world.SetCurrent({i, j}, true);
+        }
+      }
+    }
 
     world.print();
+    //playing = false;
   }
 
   return 0;
