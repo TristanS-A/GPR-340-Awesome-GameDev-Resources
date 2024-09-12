@@ -91,18 +91,60 @@ public:
   }
 };
 
+int countNeighbors(World& world, Point2D point) {
+  int count = 0;
+
+  for (int i = point.x - 1; i < point.x + 2; i++) {
+    for (int j = point.y - 1; j < point.y + 2; j++) {
+      if (point.x != i || point.y != j) {
+        count += static_cast<int>(world.Get({i, j}));
+      }
+    }
+  }
+
+  return count;
+}
+
+void step(World& world) {
+  for (int i = 0; i < world.getWidth(); i++) {
+    for (int j = 0; j < world.getHeight(); j++) {
+      const bool currSpace = world.Get({i, j});
+      const int liveNeighborCount = countNeighbors(world, {i, j});
+      if (currSpace) {
+        if (liveNeighborCount < 2) {
+          world.SetNext({i, j}, false);
+        }
+        else if (liveNeighborCount <= 3) {
+          world.SetNext({i, j}, true);
+        }
+        else {
+          world.SetNext({i, j}, false);
+        }
+      }
+      else {
+        if (liveNeighborCount == 3) {
+          world.SetNext({i, j}, true);
+        }
+      }
+    }
+  }
+}
+
 
 int main() {
+  //Variable set-up
   World world;
   bool playing = true;
   int flippedWidth = 0, flippedHeight = 0, turns = 0;
   char currState = ' ';
 
+  //Main loop
   while (playing) {
-    std::cin >> flippedWidth >> flippedHeight >> turns;
+    std::cin >> flippedWidth >> flippedHeight >> turns; //Gets inputs
 
-    world.Resize(flippedHeight, flippedWidth);
+    world.Resize(flippedHeight, flippedWidth); //Resizes world grid
 
+    //Runs through grid asking for input for each space and then sets it
     for (int i = 0; i < world.getWidth(); i++) {
       for (int j = 0; j < world.getHeight(); j++) {
         std::cin >> currState;
@@ -115,8 +157,16 @@ int main() {
       }
     }
 
+    //Does a step for the amount of turns specified
+    for (int s = 0; s < turns; s++) {
+      step(world);
+      world.SwapBuffers();
+    }
+
+    //Prints out the result
+    std::cout << std::endl;
     world.print();
-    //playing = false;
+    std::cout << std::endl;
   }
 
   return 0;
