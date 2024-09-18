@@ -24,8 +24,6 @@
 
 const std::string TEST_FOLDER = "\\tests\\";
 
-uint32_t xorShift(uint32_t seed, int r1, int r2);
-
 struct MersenneTwister {
   struct MTwisterState {
     std::vector<uint32_t> stateSet;
@@ -83,37 +81,39 @@ struct MersenneTwister {
   }
 };
 
+uint16_t xorShift(uint16_t seed);
+
 int main(){
 
-  uint32_t seed, N, min, max, result;
+  uint16_t seed, N, min, max;
   std::cin >> seed >> N >> min >> max;
 
   //xorShiftCode
-  /*for (int i = 0; i < N; i++) {
-    seed = xorShift(seed, min, max);
+  for (int i = 0; i < N; i++) {
+    seed = xorShift(seed);
     std::cout << min + (seed % (max - min + 1)) << std::endl;
-  }*/
+  }
 
   //Mersenne Twister Code
-  MersenneTwister mt;
+  /*MersenneTwister mt;
   mt.init(seed);
 
   for (int i = 0; i < N; i++) {
-    seed = mt.randomInt();
-    std::cout << min + (seed % (max - min + 1)) << std::endl;
-  }
+    int randomNumber = mt.randomInt();
+    std::cout << min + (randomNumber % (max - min + 1)) << std::endl;
+  }*/
 }
 
 //Tried writing xorShift myself
-  uint32_t xorShift(uint32_t seed)
+  uint16_t xorShift(const uint16_t seed)
   {
-    static std::unordered_map<uint32_t, uint32_t> stateMap;
+    static std::unordered_map<uint16_t, uint16_t> stateMap;
     if (stateMap.contains(seed)) {
       std::cout << "REPEAT" << std::endl;
       return stateMap[seed];
     }
-  
-    uint32_t x = seed;
+
+    uint16_t x = seed;
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
