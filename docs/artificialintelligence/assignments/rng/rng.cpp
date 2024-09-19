@@ -9,7 +9,6 @@
 //For Mersenne Twister
 #define n 624 //The degree of recurrence
 #define m 397 //The middle word that is above 0 and under n
-#define f 1812433253UL
 #define w 32 //Number of bits per int
 #define r 31 //Number of bits of the lower bitmask
 #define UMASK (0xffffffffUL << r)
@@ -21,6 +20,7 @@
 #define t 15 //Tempered bit shift
 #define c 0xefc60000UL //Tempered bitmask
 #define l 18 //Additional tempered bit shift/mask
+#define f 1812433253UL
 
 const std::string TEST_FOLDER = "\\tests\\";
 
@@ -54,8 +54,8 @@ struct MersenneTwister {
     uint32_t x = (state.stateSet[k] & UMASK) | (state.stateSet[j] & LMASK);
 
     uint32_t xA = x >> 1;
-    if (x == 0x00000001UL) {
-      xA ^= x;
+    if (x & 0x00000001UL) {
+      xA ^= a;
     }
 
     j = k - (n - m);
@@ -81,39 +81,39 @@ struct MersenneTwister {
   }
 };
 
-uint16_t xorShift(uint16_t seed);
+uint32_t xorShift(uint32_t seed);
 
 int main(){
 
-  uint16_t seed, N, min, max;
+  uint32_t seed, N, min, max;
   std::cin >> seed >> N >> min >> max;
 
   //xorShiftCode
-  for (int i = 0; i < N; i++) {
+  /*for (int i = 0; i < N; i++) {
     seed = xorShift(seed);
     std::cout << min + (seed % (max - min + 1)) << std::endl;
-  }
+  }*/
 
   //Mersenne Twister Code
-  /*MersenneTwister mt;
+  MersenneTwister mt;
   mt.init(seed);
 
   for (int i = 0; i < N; i++) {
     int randomNumber = mt.randomInt();
     std::cout << min + (randomNumber % (max - min + 1)) << std::endl;
-  }*/
+  }
 }
 
 //Tried writing xorShift myself
-  uint16_t xorShift(const uint16_t seed)
+  uint32_t xorShift(const uint32_t seed)
   {
-    static std::unordered_map<uint16_t, uint16_t> stateMap;
+    static std::unordered_map<uint32_t, uint32_t> stateMap;
     if (stateMap.contains(seed)) {
       std::cout << "REPEAT" << std::endl;
       return stateMap[seed];
     }
 
-    uint16_t x = seed;
+    uint32_t x = seed;
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
