@@ -7,8 +7,8 @@
 #include <vector>
 
 //For Mersenne Twister
-#define n 624 //The degree of recurrence
-#define m 397 //The middle word that is above 0 and under n
+#define n 1 //The degree of recurrence
+#define m 1 //The middle word that is above 0 and under n
 #define w 32 //Number of bits per int
 #define r 31 //Number of bits of the lower bitmask
 #define UMASK (0xffffffffUL << r)
@@ -24,101 +24,81 @@
 
 const std::string TEST_FOLDER = "\\tests\\";
 
+//Modified Mersenne Twister code
 struct MersenneTwister {
-  struct MTwisterState {
-    std::vector<uint32_t> stateSet;
-    int stateIndex;
-  };
+  uint16_t state;
+  std::unordered_map<uint16_t, uint16_t> stateMap;
 
-  MTwisterState state;
-
-  void init(uint32_t seed) {
-    state.stateSet.reserve(n);
-    state.stateSet.push_back(seed);
-
-    for (int i = 1; i < n; i++) {
-      seed = f * (seed ^ (seed >> (w-2))) + i;
-      state.stateSet.push_back(seed);
-    }
-
-    state.stateIndex = 0;
+  void init(uint16_t seed) {
+    seed = f * (seed ^ (seed >> (w-2)));
+    state = seed;
   }
 
-  uint32_t randomInt() {
-    int k = state.stateIndex;
-    int j = k - (n - 1);
-    if (j < 0) {
-      j += n;
-    }
+  uint16_t randomInt() {
+    uint16_t x = (state & UMASK) | (state & LMASK);
 
-    uint32_t x = (state.stateSet[k] & UMASK) | (state.stateSet[j] & LMASK);
-
-    uint32_t xA = x >> 1;
+    uint16_t xA = x >> 1;
     if (x & 0x00000001UL) {
       xA ^= a;
     }
 
-    j = k - (n - m);
-    if (j < 0) {
-      j += n;
-    }
+    x = state ^ xA;
+    state = x;
 
-    x = state.stateSet[j] ^ xA;
-    state.stateSet[k++] = x;
-
-    if (k >= n) {
-      k = 0;
-    }
-
-    state.stateIndex = k;
-
-    uint32_t y = x ^ (x >> u);
+    uint16_t y = x ^ (x >> u);
     y ^= ((y << s) & b);
     y ^= ((y << t) & c);
-    uint32_t z = y ^ (y >> l);
+    uint16_t z = y ^ (y >> l);
 
     return z;
   }
 };
 
-uint32_t xorShift(uint32_t seed);
-
-int main(){
-
-  uint32_t seed, N, min, max;
-  std::cin >> seed >> N >> min >> max;
-
-  //xorShiftCode
-  /*for (int i = 0; i < N; i++) {
-    seed = xorShift(seed);
-    std::cout << min + (seed % (max - min + 1)) << std::endl;
-  }*/
-
-  //Mersenne Twister Code
-  MersenneTwister mt;
-  mt.init(seed);
-
-  for (int i = 0; i < N; i++) {
-    int randomNumber = mt.randomInt();
-    std::cout << min + (randomNumber % (max - min + 1)) << std::endl;
-  }
-}
-
 //Tried writing xorShift myself
-  uint32_t xorShift(const uint32_t seed)
-  {
-    static std::unordered_map<uint32_t, uint32_t> stateMap;
-    if (stateMap.contains(seed)) {
-      std::cout << "REPEAT" << std::endl;
-      return stateMap[seed];
-    }
-
-    uint32_t x = seed;
+struct XorShift {
+  std::unordered_map<uint16_t, uint16_t> stateMap;
+  uint16_t state;
+  uint16_t getRandomNumber(uint16_t seed) {
+    uint16_t x = seed;
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
 
-    stateMap[seed] = x;
-
     return x;
   }
+};
+
+int main(){
+
+  uint16_t seed, N, min, max;
+  std::cin >> seed >> N >> min >> max;
+
+  //xorShiftCode
+  XorShift xorShift;
+  for (int i = 0; i < N; i++) {
+    uint16_t initialSeed = seed;
+    if (xorShift.stateMap.contains(seed)) {
+      std::cout << "Cycle has restarted" << std::endl;
+      break;
+    }
+    seed = xorShift.getRandomNumber(seed);
+    std::cout << min + (seed % (max - min + 1)) << std::endl;
+    xorShift.stateMap.emplace(initialSeed, seed);
+  }
+
+  //Mersenne Twister Code
+  /*MersenneTwister mt;
+  mt.init(seed);
+
+  for (int i = 0; i < N; i++) {
+    uint16_t initialState = mt.state;
+    if (mt.stateMap.contains(mt.state)) {
+      std::cout << "Cycle has restarted" << std::endl;
+      break;
+    }
+
+    int randomNumber = mt.randomInt();
+    std::cout << min + (randomNumber % (max - min + 1)) << std::endl;
+    mt.stateMap[initialState] = randomNumber;
+  }*/
+}
