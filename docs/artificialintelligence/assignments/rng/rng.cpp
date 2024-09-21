@@ -7,8 +7,6 @@
 #include <vector>
 
 //For Mersenne Twister
-#define n 1 //The degree of recurrence
-#define m 1 //The middle word that is above 0 and under n
 #define w 32 //Number of bits per int
 #define r 31 //Number of bits of the lower bitmask
 #define UMASK (0xffffffffUL << r)
@@ -26,29 +24,32 @@ const std::string TEST_FOLDER = "\\tests\\";
 
 //Modified Mersenne Twister code
 struct MersenneTwister {
-  uint16_t state;
-  std::unordered_map<uint16_t, uint16_t> stateMap;
+  uint32_t state;
+  std::unordered_map<uint32_t, uint32_t> stateMap;
 
-  void init(uint16_t seed) {
-    seed = f * (seed ^ (seed >> (w-2)));
+  void init(uint32_t seed) {
+    seed = f * (seed ^ (seed >> (w-2))); //Initializes state
     state = seed;
   }
 
-  uint16_t randomInt() {
-    uint16_t x = (state & UMASK) | (state & LMASK);
+  uint32_t randomInt() {
+    uint32_t x = (state & UMASK) | (state & LMASK); //Converts previous state into new bit shifted num
 
-    uint16_t xA = x >> 1;
+    //Sets up current state
+    uint32_t xA = x >> 1;
     if (x & 0x00000001UL) {
       xA ^= a;
     }
 
+    //Updates current state
     x = state ^ xA;
     state = x;
 
-    uint16_t y = x ^ (x >> u);
+    //Tempering for random number result
+    uint32_t y = x ^ (x >> u);
     y ^= ((y << s) & b);
     y ^= ((y << t) & c);
-    uint16_t z = y ^ (y >> l);
+    uint32_t z = y ^ (y >> l);
 
     return z;
   }
@@ -56,10 +57,12 @@ struct MersenneTwister {
 
 //Tried writing xorShift myself
 struct XorShift {
-  std::unordered_map<uint16_t, uint16_t> stateMap;
-  uint16_t state;
-  uint16_t getRandomNumber(uint16_t seed) {
-    uint16_t x = seed;
+  std::unordered_map<uint32_t, uint32_t> stateMap;
+  uint32_t state;
+  uint32_t getRandomNumber(uint32_t seed) {
+    uint32_t x = seed;
+
+    //xOrShifts 3 times
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
@@ -70,35 +73,46 @@ struct XorShift {
 
 int main(){
 
-  uint16_t seed, N, min, max;
-  std::cin >> seed >> N >> min >> max;
+  uint32_t seed, N, min, max;
+  std::cin >> seed >> N >> min >> max; //Gets input values
+
+  int count = 0; //Count variable to count cycle length
 
   //xorShiftCode
-  XorShift xorShift;
-  for (int i = 0; i < N; i++) {
-    uint16_t initialSeed = seed;
+  /*XorShift xorShift;
+  for (int i = 0; i < N; i++) { //Runs through numbers to generate
+    uint32_t initialSeed = seed; //Saves initial seed
+
+    //Checks if the cycle has repeated and breaks loop
     if (xorShift.stateMap.contains(seed)) {
       std::cout << "Cycle has restarted" << std::endl;
+      std::cout << "Cycle length: " << count << std::endl;
       break;
     }
-    seed = xorShift.getRandomNumber(seed);
-    std::cout << min + (seed % (max - min + 1)) << std::endl;
-    xorShift.stateMap.emplace(initialSeed, seed);
-  }
+    seed = xorShift.getRandomNumber(seed); //Gets random number and updates the seed
+    std::cout << min + (seed % (max - min + 1)) << std::endl; //Clamps result to specified range and outputs it
+    xorShift.stateMap.emplace(initialSeed, seed); //Adds result to stateMap with the initial seed as the key
+    count++; //Increments the cycle count
+  }*/
 
   //Mersenne Twister Code
-  /*MersenneTwister mt;
-  mt.init(seed);
+  MersenneTwister mt;
+  mt.init(seed); //Initiates Twister
 
+  //Runs through numbers to generate
   for (int i = 0; i < N; i++) {
-    uint16_t initialState = mt.state;
+    uint32_t initialState = mt.state; //Saves initial seed
+
+    //Checks if the cycle has repeated and breaks loop
     if (mt.stateMap.contains(mt.state)) {
       std::cout << "Cycle has restarted" << std::endl;
+      std::cout << "Cycle length: " << count << std::endl;
       break;
     }
 
-    int randomNumber = mt.randomInt();
-    std::cout << min + (randomNumber % (max - min + 1)) << std::endl;
-    mt.stateMap[initialState] = randomNumber;
-  }*/
+    int randomNumber = mt.randomInt(); //Gets random number
+    std::cout << min + (randomNumber % (max - min + 1)) << std::endl; //Clamps result to specified range and outputs it
+    mt.stateMap[initialState] = randomNumber; //Adds result to stateMap with the initial seed as the key
+    count++; //Increments cycle count
+  }
 }
