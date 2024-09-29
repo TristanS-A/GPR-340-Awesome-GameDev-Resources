@@ -121,7 +121,7 @@ struct Maze {
       if (randomNumberIndex == std::size(randomInts)) { //Loop index if reaches the end of the array
         randomNumberIndex = 0;
       }
-      return randomInts[randomNumberIndex++]; //Returns the random number at the current index and increments inded
+      return randomInts[randomNumberIndex++]; //Returns the random number at the current index and increments index
     }
 
   void setRandomIndex(int index) { randomNumberIndex = index; }; //Sets the initial value of the random number index
